@@ -6,7 +6,7 @@ https://cloudnative-pg.io/documentation/1.22/
 ### Notes
 The following parameters are fixed and exclusively controlled by the operator:
 https://cloudnative-pg.io/documentation/1.22/postgresql_conf/#fixed-parameters
-`
+```
 archive_command = '/controller/manager wal-archive %p'
 archive_mode = 'on'
 full_page_writes = 'on'
@@ -21,7 +21,7 @@ ssl_key_file = '/controller/certificates/server.key'
 unix_socket_directories = '/controller/run'
 wal_level = 'logical'
 wal_log_hints = 'on'
-`
+```
 
 - The operator requires PostgreSQL to output its log in CSV format, and the instance manager automatically parses it and outputs it in JSON format. For this reason, all log settings in PostgreSQL are fixed and cannot be changed.
 
