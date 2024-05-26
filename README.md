@@ -35,8 +35,7 @@ pgaudit
 pg_failover_slots
 `
 
-- Changing configuration
-You can apply configuration changes by editing the postgresql section of the Cluster resource.
+- Changing configuration. You can apply configuration changes by editing the postgresql section of the Cluster resource.
 After the change, the cluster instances will immediately reload the configuration to apply the changes. If the change involves a parameter requiring a restart, the operator will perform a rolling upgrade.
 
 More info https://cloudnative-pg.io/documentation/current/postgresql_conf/
@@ -59,7 +58,7 @@ spec:
 ```
 
 ### Troubleshooting
-https://cloudnative-pg.io/documentation/1.22/troubleshooting/
+- https://cloudnative-pg.io/documentation/1.22/troubleshooting/
 
 ### terraform, vault, external-secret
 - Vault secret path should be in format `kubernetes-secrets/postgres-pod/<namespace>/<db-name>`
