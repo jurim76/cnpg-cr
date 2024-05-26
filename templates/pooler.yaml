@@ -1,0 +1,41 @@
+{{- range $x, $d := .Values.databases }}
+{{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+{{- /* wrap with brackets to prevent helm to dive into non-existent object */}}
+{{- $instancePooler := hasKey ($d.pooler) "enabled" | ternary ($d.pooler).enabled $.Values.pooler.enabled }}
+{{- $instancePoolerInstances := ($d.pooler).instances | default $.Values.pooler.instances }}
+{{- $instancePoolerParams := ($d.pooler).parameters | default $.Values.pooler.parameters }}
+{{- $instancePoolerMode := ($d.pooler).mode | default $.Values.pooler.mode }}
+{{- /* if true, pause client connections */}}
+{{- $instancePoolerPaused := hasKey ($d.pooler) "paused" | ternary ($d.pooler).paused $.Values.pooler.paused }}
+
+{{- if eq (toString $instancePooler) "true" }}
+{{- /* cnpg services suffixes are "rw", "ro" */}}
+{{- range list "rw" "ro" }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ $instanceName }}-pooler-{{ . }}
+  labels: {{- include "core.labels" $ | nindent 4 }}
+    name: {{ $instanceName }}-pooler-{{ . }}
+spec:
+  cluster:
+    name: {{ $instanceName }}
+  instances: {{ $instancePoolerInstances }}
+  type: {{ . }}
+  template:
+    spec:
+      containers:
+      - name: pgbouncer
+        image: {{ $.Values.pooler.image }}
+      imagePullSecrets:
+      - name: {{ $.Values.image.pullSecret }}
+  pgbouncer:
+    poolMode: {{ $instancePoolerMode }}
+    parameters: {{- toYaml $instancePoolerParams | nindent 6 }}
+    paused: {{ $instancePoolerPaused }}
+  monitoring:
+    enablePodMonitor: true
+{{- end }}
+{{- end }}
+{{- end -}}

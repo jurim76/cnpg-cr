@@ -1,0 +1,22 @@
+{{- range $x, $d := .Values.databases }}
+{{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+{{- /* wrap with brackets to prevent helm to dive into non-existent object */}}
+{{- $instanceBackup := hasKey ($d.backup) "enabled" | ternary ($d.backup).enabled $.Values.backup.enabled }}
+{{- $instanceSchedule := $.Values.backup.schedule }}
+
+{{- if eq (toString $instanceBackup) "true" }}
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: {{ $instanceName }}-backup
+spec:
+{{- if $.Values.backup.snapshot }}
+  method: volumeSnapshot
+{{- end }}
+  schedule: {{ $instanceSchedule | quote }}
+  backupOwnerReference: self
+  cluster:
+    name: {{ $instanceName }}
+{{- end }}
+{{- end -}}

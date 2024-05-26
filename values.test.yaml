@@ -1,0 +1,18 @@
+# for testing only
+databases:
+- name: warehouse
+  instances: 2
+  storage: 2Gi
+  storageClass: topolvm-thinpool
+  pooler:
+    enabled: true
+  service:
+    name: warehouse
+    external: true
+    namespaces:
+      - dr
+  config: postgres-conf-dev
+  adminSecret: warehouse-db
+backup:
+  schedule: "0 0 * * * *"
+  retention: 1d

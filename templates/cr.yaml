@@ -1,0 +1,130 @@
+{{- range $x, $d := .Values.databases }}
+{{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+{{- $instanceRequestCpu := (($d.requests | default dict).cpu) | default $.Values.default.requests.cpu }}
+{{- $instanceRequestMemory := (($d.requests | default dict).memory) | default $.Values.default.requests.memory }}
+{{- $instanceLimitCpu := (($d.limits | default dict).cpu) | default $.Values.default.limits.cpu }}
+{{- $instanceLimitMemory := (($d.limits | default dict).memory) | default $.Values.default.limits.memory }}
+{{- $instanceNumber := $d.instances | default $.Values.default.instances }}
+{{- $instanceAdminSecret := $d.adminSecret | default "" }}
+{{- $instanceDatabases := $d.databases | default $.Values.default.databases }}
+{{- $instanceStorageClass := $d.storageClass }}
+{{- $instanceUsers := $d.users | default $.Values.default.users }}
+{{- $instancePooler := hasKey $d "enabled" | ternary $d.enabled $.Values.pooler.enabled }}
+{{- $instancePoolerNum := $d.pooler_num | default $.Values.pooler.instances }}
+{{- $instancePoolerDbConn := $d.pooler_db_conn | default $.Values.pooler.db_conn }}
+{{- $instanceParameters := $d.parameters | default "" }}
+{{- $instanceAnnotations := $d.annotations | default "" }}
+{{- $instanceS3Path := printf "%s/%s" $.Values.minio.bucket $.Release.Namespace }}
+{{- $dbName := include "database.name" (dict "scope" $ "x" $x) }}
+{{- $dbConfig := ($d.config | default "") }}
+{{- $nodeAffinity := $d.nodeAffinity | default $.Values.default.nodeAffinity }}
+
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ $instanceName }}
+  annotations: {{- toYaml $.Values.commonAnnotations | nindent 4 }}
+  {{- if $instanceAnnotations }}
+  {{- toYaml $instanceAnnotations | nindent 4 }}
+  {{- end }}
+  labels: {{- include "core.labels" $ | nindent 4 }}
+spec:
+  imageName: {{ $.Values.image.name }}
+  primaryUpdateStrategy: {{ $.Values.primaryUpdateStrategy }}
+  {{- if $instanceAdminSecret }}
+  enableSuperuserAccess: true
+  superuserSecret:
+    name: {{ $instanceAdminSecret }}
+  {{- end }}
+  storage:
+  {{- if $instanceStorageClass }}
+    storageClass: {{ $instanceStorageClass }}
+  {{- end }}
+    size: {{ include "helper.getValue" (dict "key" "storage" "scope" $ "x" $x) }}
+  instances: {{ $instanceNumber }}
+  affinity:
+    enablePodAntiAffinity: true
+    nodeAffinity: {{- toYaml $nodeAffinity | nindent 6 }}
+  resources:
+    {{- if or $instanceRequestCpu $instanceRequestMemory }}
+    requests:
+      {{- if $instanceRequestCpu }}
+      cpu: {{ $instanceRequestCpu }}
+      {{- end }}
+      memory: {{ $instanceRequestMemory }}
+    {{- end }}
+    {{- if or $instanceLimitCpu $instanceLimitMemory }}
+    limits:
+      {{- if $instanceLimitCpu }}
+      cpu: {{ $instanceLimitCpu }}
+      {{- end }}
+      {{- if $instanceLimitMemory }}
+      memory: {{ $instanceLimitMemory }}
+      {{- end }}
+    {{- end }}
+  failoverDelay: {{ $.Values.failoverDelay }}
+  # failover slots: valid for 2 or more replicas
+  replicationSlots:
+    highAvailability:
+      enabled: true
+  postgresql:
+    shared_preload_libraries: {{- toYaml $.Values.postgresql.shared_preload_libraries | nindent 6 }}
+    parameters:
+    {{- if $instanceParameters }}
+      # custom parameters
+    {{- toYaml $instanceParameters | nindent 6 }}
+    {{- end }}
+    {{- toYaml $.Values.postgresql.parameters | nindent 6 }}
+  backup:
+    target: prefer-standby
+    barmanObjectStore:
+      destinationPath: {{ $instanceS3Path }}
+      endpointURL: {{ $.Values.minio.endpoint }}
+      s3Credentials:
+        accessKeyId:
+          name: {{ $.Values.minio.secret }}
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: {{ $.Values.minio.secret }}
+          key: ACCESS_SECRET_KEY
+      wal:
+        compression: gzip
+        maxParallel: 4
+      data:
+        compression: gzip
+        jobs: 2
+    retentionPolicy: {{ $.Values.backup.retention | quote }}
+{{- if $.Values.backup.snapshot }}
+    volumeSnapshot:
+      className: topolvm
+      online: true
+      onlineConfiguration:
+        immediateCheckpoint: true
+      snapshotOwnerReference: backup
+{{- end }}
+  projectedVolumeTemplate:
+    sources:
+  {{- /* Default postgresql config*/}}
+    - configMap:
+        name: {{ $.Values.postgresConfig }}
+        items:
+        - key: postgresql.conf
+          path: config/postgresql01.conf
+  {{- /* Additional postgresql config*/}}
+  {{- if $dbConfig }}
+    - configMap:
+        name: {{ $dbConfig }}
+        items:
+        - key: postgresql.conf
+          path: config/postgresql02.conf
+  {{- end }}
+  monitoring:
+    # chart uses custom podMonitor
+    enablePodMonitor: false
+{{- if $.Values.exporter.configMapName }}
+    customQueriesConfigMap:
+    - name: {{ $.Values.exporter.configMapName }}
+      key: queries.yaml
+{{- end }}
+{{- end -}}

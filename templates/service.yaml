@@ -1,0 +1,75 @@
+{{- /* additional services for compatibility with legacy naming convention */}}
+{{- range $x, $d := .Values.databases }}
+
+{{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+{{- /* wrap with brackets to prevent helm to dive into non-existent object */}}
+{{- $instancePooler := hasKey ($d.pooler) "enabled" | ternary ($d.pooler).enabled $.Values.pooler.enabled }}
+{{- $serviceName := ($d.service).name | default "" }}
+
+{{- if $serviceName }}
+
+{{- if eq (toString ($d.service).external) "true" }}
+{{- range $y, $ns := ($d.service).namespaces }}
+{{- if ne $ns $.Release.Namespace }}
+{{- /* cnpg services suffixes are "rw", "ro" */}}
+{{- range list "rw" "ro" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  {{- /* HACKME: legacy service has a weird name convention */}}
+  {{- if eq . "rw" }}
+  name: {{ $serviceName }}-{{ $.Values.nameSuffix }}
+  {{- else }}
+  name: {{ $serviceName }}-{{ . }}
+  {{- end }}
+  namespace: {{ $ns }}
+  labels: {{- include "core.labels" $ | nindent 4 }}
+spec:
+  type: ExternalName
+{{- if $instancePooler }}
+  externalName: {{ $serviceName }}-{{ $.Values.nameSuffix }}-pooler-{{ . }}.{{ $.Release.Namespace }}.{{ $.Values.serviceDomain }}
+{{- else }}
+  externalName: {{ $serviceName }}-{{ $.Values.nameSuffix }}-{{ . }}.{{ $.Release.Namespace }}.{{ $.Values.serviceDomain }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- else }}
+
+{{- range list "rw" "ro" }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  {{- /* HACKME: legacy service has a weird name convention */}}
+  {{- if eq . "rw" }}
+  name: {{ $serviceName }}-{{ $.Values.nameSuffix }}
+  {{- else }}
+  name: {{ $serviceName }}-{{ . }}
+  {{- end }}
+  labels: {{- include "core.labels" $ | nindent 4 }}
+spec:
+  ports:
+  - port: 5432
+    name: postgres
+  selector:
+{{- if $instancePooler }}
+    cnpg.io/poolerName: {{ $instanceName }}-pooler
+    name: {{ $instanceName }}-pooler-{{ . }}
+{{- else }}
+{{- if eq . "rw" }}
+    cnpg.io/cluster: {{ $instanceName }}
+    role: primary
+{{- end }}
+{{- if eq . "ro" }}
+    cnpg.io/cluster: {{ $instanceName }}
+    role: replica
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- end }}
+{{- end }}
+{{- end -}}

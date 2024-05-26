@@ -1,0 +1,37 @@
+{{- range $x, $d := .Values.databases }}
+{{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ $instanceName }}-exporter
+  labels: {{- include "core.labels" $ | nindent 4 }}
+    name: {{ $instanceName }}-exporter
+    release: {{ $.Values.exporter.release }}
+spec:
+  podMetricsEndpoints:
+  - port: metrics
+    relabelings:
+    - action: replace
+      sourceLabels: [ __meta_kubernetes_pod_label_app_kubernetes_io_instance ]
+      targetLabel: app_instance
+    metricRelabelings:
+    - action: replace
+      sourceLabels: [ __name__ ]
+      targetLabel: '__name__'
+      regex: 'cnpg_(dba_.*)'
+      replacement: '$1'
+    - action: replace
+      sourceLabels: [ pod ]
+      targetLabel: instance
+      regex: '(.+)-\d'
+    - action: drop
+      sourceLabels: [ __name__ ]
+      regex: '^go_.+$'
+    - action: labeldrop
+      regex: "endpoint|service|job|pod|container|server|ip"
+  selector:
+    matchLabels:
+      cnpg.io/cluster: {{ $instanceName }}
+      type: pgdb
+{{- end }}

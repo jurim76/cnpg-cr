@@ -1,0 +1,11 @@
+apiVersion: v2
+name: cnpg-crd
+description: CloudNative-PG operator Custom Resource Definition
+icon: https://raw.githubusercontent.com/cloudnative-pg/artwork/main/cloudnativepg-logo.svg
+version: 0.19.3
+appVersion: 1.22.2
+maintainers:
+  - name: Juri Malinovski
+    email: juri.malinovski@coolbet.com
+sources:
+  - https://bitbucket.org/opsstuff/helm-charts/src/master/cnpg-crd
