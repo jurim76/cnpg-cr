@@ -61,20 +61,9 @@ spec:
 ### Troubleshooting
 https://cloudnative-pg.io/documentation/1.22/troubleshooting/
 
-
-### TODO
-- ~~~Use secrets instead of Vault annotations~~~
-- Define security model for operator resources
-
-
-### Issues
-- ~~~Inherited labels are not applied for podmonitors https://github.com/cloudnative-pg/cloudnative-pg/issues/2582~~~
-- ~~~pg_monitor role requires additional permissions for dba metrics~~~
-
 ### terraform, vault, external-secret
 - Vault secret path should be in format `kubernetes-secrets/postgres-pod/<namespace>/<db-name>`
 - External-secret store should be configured as `ClusterSecretStore`, pointed to `kubernetes-secrets/postgres-pod` vault path
-- More info here https://gan-tech.atlassian.net/l/cp/vg26imLn
 
 ### Backup
 - To enable volumesnapshot for backup, set `backup.snapshot: true` in values
