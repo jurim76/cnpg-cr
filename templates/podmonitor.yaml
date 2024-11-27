@@ -1,5 +1,6 @@
-{{- range $x, $d := .Values.databases }}
+{{- range $d := .Values.databases }}
 {{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
+{{- $instancePooler := hasKey ($d.pooler) "enabled" | ternary ($d.pooler).enabled $.Values.pooler.enabled }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -28,10 +29,32 @@ spec:
     - action: drop
       sourceLabels: [ __name__ ]
       regex: '^go_.+$'
-    - action: labeldrop
-      regex: "endpoint|service|job|pod|container|server|ip"
   selector:
     matchLabels:
       cnpg.io/cluster: {{ $instanceName }}
+      cnpg.io/podRole: instance
       type: pgdb
+{{- /* pooler PodMonitor */}}
+{{- if eq (toString $instancePooler) "true" }}
+{{- range list "rw" "ro" }}
+{{ $poolerName := printf "%s-%s-%s" $instanceName "pooler" . }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  labels:
+    cnpg.io/poolerName: {{ $poolerName }}
+    release: {{ $.Values.exporter.release }}
+  name: {{ $poolerName }}
+spec:
+  podMetricsEndpoints:
+  - bearerTokenSecret:
+      key: ""
+      name: ""
+    port: metrics
+  selector:
+    matchLabels:
+      cnpg.io/poolerName: {{ $poolerName }}
+{{- end }}
+{{- end }}
 {{- end }}

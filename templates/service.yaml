@@ -1,5 +1,5 @@
 {{- /* additional services for compatibility with legacy naming convention */}}
-{{- range $x, $d := .Values.databases }}
+{{- range $d := .Values.databases }}
 
 {{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
 {{- /* wrap with brackets to prevent helm to dive into non-existent object */}}

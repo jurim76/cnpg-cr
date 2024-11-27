@@ -1,4 +1,4 @@
-{{- range $x, $d := .Values.databases }}
+{{- range $d := .Values.databases }}
 {{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
 {{- /* wrap with brackets to prevent helm to dive into non-existent object */}}
 {{- $instanceBackup := hasKey ($d.backup) "enabled" | ternary ($d.backup).enabled $.Values.backup.enabled }}

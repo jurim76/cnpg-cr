@@ -1,5 +1,5 @@
 # PITR example
-# https://cloudnative-pg.io/documentation/1.22/recovery/
+# https://cloudnative-pg.io/documentation/1.24/recovery/
 
 ---
 apiVersion: postgresql.cnpg.io/v1
@@ -12,7 +12,7 @@ spec:
   storage:
     size: 5Gi
   # postgresql version should be the same for both clusters
-  imageName: ent.staycool.ee/coolbet/postgres-cnpg:15.5-b16
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.6-5
   # configuration should be the same for both clusters
   affinity:
     nodeAffinity:
@@ -38,7 +38,7 @@ spec:
     barmanObjectStore:
       # minio S3 definition
       destinationPath: s3://pgbackup/
-      endpointURL: http://minio-cluster.tooling:9000
+      endpointURL: http://minio-cluster:9000
       # minio-s3 secret
       s3Credentials:
         accessKeyId:

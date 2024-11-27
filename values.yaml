@@ -1,15 +1,27 @@
 # commonLabels these labels are added to all the manifests
-commonLabels:
-  owner_team: ops-devops
-  tech: postgres
-  type: pgdb
+commonLabels: {}
 
 commonAnnotations:
   categories: database
 
+podEnv:
+- name: KUBE_NAMESPACE
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.namespace
+- name: ENV_NAME
+  valueFrom:
+    configMapKeyRef:
+      name: environment-name
+      key: env
+      optional: true
+
 image:
-  name: CHANGEME/postgres-cnpg:16.3-b0
-  pullSecret: regcred
+  registry: ghcr.io
+  repository: cloudnative-pg/postgresql
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+  pullSecret: ""
 
 # nameSuffix to generate db name
 nameSuffix: db
@@ -21,27 +33,24 @@ serviceAccount:
   create: true
   name: postgres-pod
 
-minio:
+s3:
   bucket: s3://pgbackup
-  endpoint: http://minio-cluster.tooling:9000
-  secret: minio-s3
-
-vault:
-  path: /vault/secrets/minio
+  endpoint: http://seaweedfs-s3.seaweedfs:8333
+  secret: seaweedfs-s3
 
 backup:
-  enabled: true
+  enabled: false
   snapshot: false
-  schedule: "0 0 0 * * 1"
+  schedule: "0 0 0 * * *"
   retention: 8d
 
 # delay in seconds before failover (1 week)
-failoverDelay: 604800
+#failoverDelay: 604800
 
 # rolling update process is managed by operator
 primaryUpdateStrategy: unsupervised
 
-priorityClassName: topolvm
+priorityClassName: ""
 
 # base postgresql config
 postgresConfig: postgres-base-conf
@@ -63,7 +72,7 @@ postgresql:
 
 pooler:
   enabled: true
-  image: CHANGEME/pgbouncer-cnpg:1.22.1-b1
+  image: ghcr.io/cloudnative-pg/pgbouncer:1.23.0
   mode: transaction
   instances: 2
   paused: false
@@ -74,10 +83,29 @@ pooler:
 exporter:
   # prometheus discovery label
   release: prometheus-dbs
-  configMapName: postgres13-exporter-cm
+  configMapName: postgres-exporter-cm
+
+# additional postgres config
+config: ""
 
 # cluster instances
 databases: []
+
+affinity:
+  enablePodAntiAffinity: true
+  topologyKey: hw_host
+  nodeAffinity: {}
+  #  requiredDuringSchedulingIgnoredDuringExecution:
+  #    nodeSelectorTerms:
+  #    - matchExpressions:
+  #      - key: pgdb
+  #        operator: In
+  #        values:
+  #        - "true"
+  #      - key: node-type
+  #        operator: NotIn
+  #        values:
+  #        - "bare-metal"
 
 # database defaults that can be overwritten per-instance
 default:
@@ -89,18 +117,12 @@ default:
   storage: 10Gi
   # pod resource requests
   requests:
-    cpu: 500m
-    memory: 1Gi
+    cpu: 100m
+    # mebibyte
+    memory: 200Mi
   # pod resource limits
   limits: {}
   # number of postgres instances
   instances: 2
-  # nodeAffinity
-  nodeAffinity:
-    requiredDuringSchedulingIgnoredDuringExecution:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: pgdb
-          operator: In
-          values:
-          - "true"
+  # nodeSelector
+  nodeSelector: {}

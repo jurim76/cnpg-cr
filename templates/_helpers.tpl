@@ -21,7 +21,7 @@ app.kubernetes.io/name: {{ .Chart.Name }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-# Takes in dict ("key" "suffix" "scope" $ "x" $x "y" $y)
+{{- /* Takes in dict ("key" "suffix" "scope" $ "x" $x "y" $y) */}}
 {{- define "helper.getValue" }}
     {{- $root := .scope.Values }}
     {{- $dbScope := ternary (index $root.databases .x) (dict) (hasKey . "x") }}
@@ -38,7 +38,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
     {{- end }}
 {{- end }}
 
-{{/* Create chart name and version as used by the chart label */}}
+{{- /* Create chart name and version as used by the chart label */}}
 {{- define "chart.chart" -}}
 {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

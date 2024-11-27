@@ -1,11 +1,11 @@
 Chart for deploying CloudNative-PG operator CR (Custom Resource).
 CloudNativePG is an open source operator designed to manage PostgreSQL workloads.
-https://cloudnative-pg.io/documentation/1.22/
+https://cloudnative-pg.io/documentation/current/
 
 
 ### Notes
 The following parameters are fixed and exclusively controlled by the operator:
-https://cloudnative-pg.io/documentation/1.22/postgresql_conf/#fixed-parameters
+https://cloudnative-pg.io/documentation/current/postgresql_conf/#fixed-parameters
 ```
 archive_command = '/controller/manager wal-archive %p'
 archive_mode = 'on'
@@ -58,7 +58,7 @@ spec:
 ```
 
 ### Troubleshooting
-- https://cloudnative-pg.io/documentation/1.22/troubleshooting/
+- https://cloudnative-pg.io/documentation/current/troubleshooting/
 
 ### terraform, vault, external-secret
 - Vault secret path should be in format `kubernetes-secrets/postgres-pod/<namespace>/<db-name>`

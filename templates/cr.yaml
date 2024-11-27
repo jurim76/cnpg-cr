@@ -14,11 +14,11 @@
 {{- $instancePoolerDbConn := $d.pooler_db_conn | default $.Values.pooler.db_conn }}
 {{- $instanceParameters := $d.parameters | default "" }}
 {{- $instanceAnnotations := $d.annotations | default "" }}
-{{- $instanceS3Path := printf "%s/%s" $.Values.minio.bucket $.Release.Namespace }}
+{{- $instanceS3Path := printf "%s/%s" $.Values.s3.bucket $.Release.Namespace }}
 {{- $dbName := include "database.name" (dict "scope" $ "x" $x) }}
-{{- $dbConfig := ($d.config | default "") }}
-{{- $nodeAffinity := $d.nodeAffinity | default $.Values.default.nodeAffinity }}
-
+{{- $dbConfig := ($d.config | default $.Values.config) }}
+{{- $nodeAffinity := $d.nodeAffinity | default $.Values.affinity.nodeAffinity }}
+{{- $nodeSelector := $d.nodeSelector | default $.Values.default.nodeSelector }}
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -28,9 +28,15 @@ metadata:
   {{- if $instanceAnnotations }}
   {{- toYaml $instanceAnnotations | nindent 4 }}
   {{- end }}
+  {{- /* Do not delete on helm uninstall */}}
+    helm.sh/resource-policy: keep
   labels: {{- include "core.labels" $ | nindent 4 }}
 spec:
-  imageName: {{ $.Values.image.name }}
+  imageName: {{ $.Values.image.registry }}/{{ $.Values.image.repository }}:{{ $.Values.image.tag | default $.Chart.AppVersion }}
+  {{- if $.Values.image.pullSecret }}
+  imagePullSecrets:
+    - name: {{ $.Values.image.pullSecret }}
+  {{- end }}
   primaryUpdateStrategy: {{ $.Values.primaryUpdateStrategy }}
   {{- if $instanceAdminSecret }}
   enableSuperuserAccess: true
@@ -44,8 +50,16 @@ spec:
     size: {{ include "helper.getValue" (dict "key" "storage" "scope" $ "x" $x) }}
   instances: {{ $instanceNumber }}
   affinity:
-    enablePodAntiAffinity: true
+    enablePodAntiAffinity: {{ $.Values.affinity.enablePodAntiAffinity }}
+    topologyKey: {{ $.Values.affinity.topologyKey }}
+  {{- if $nodeAffinity }}
     nodeAffinity: {{- toYaml $nodeAffinity | nindent 6 }}
+  {{- end }}
+  {{- if and $nodeSelector (not $nodeAffinity) }}
+    nodeSelector: {{- toYaml $nodeSelector | nindent 6 }}
+  {{- end }}
+  env:
+  {{- toYaml $.Values.podEnv | nindent 4 }}
   resources:
     {{- if or $instanceRequestCpu $instanceRequestMemory }}
     requests:
@@ -80,13 +94,13 @@ spec:
     target: prefer-standby
     barmanObjectStore:
       destinationPath: {{ $instanceS3Path }}
-      endpointURL: {{ $.Values.minio.endpoint }}
+      endpointURL: {{ $.Values.s3.endpoint }}
       s3Credentials:
         accessKeyId:
-          name: {{ $.Values.minio.secret }}
+          name: {{ $.Values.s3.secret }}
           key: ACCESS_KEY_ID
         secretAccessKey:
-          name: {{ $.Values.minio.secret }}
+          name: {{ $.Values.s3.secret }}
           key: ACCESS_SECRET_KEY
       wal:
         compression: gzip
@@ -105,13 +119,13 @@ spec:
 {{- end }}
   projectedVolumeTemplate:
     sources:
-  {{- /* Default postgresql config*/}}
+  {{- /* Default postgresql config */}}
     - configMap:
         name: {{ $.Values.postgresConfig }}
         items:
         - key: postgresql.conf
           path: config/postgresql01.conf
-  {{- /* Additional postgresql config*/}}
+  {{- /* Additional postgresql config */}}
   {{- if $dbConfig }}
     - configMap:
         name: {{ $dbConfig }}
@@ -120,7 +134,7 @@ spec:
           path: config/postgresql02.conf
   {{- end }}
   monitoring:
-    # chart uses custom podMonitor
+    {{- /* chart uses custom podMonitor */}}
     enablePodMonitor: false
 {{- if $.Values.exporter.configMapName }}
     customQueriesConfigMap:

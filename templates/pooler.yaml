@@ -1,10 +1,12 @@
-{{- range $x, $d := .Values.databases }}
+{{- range $d := .Values.databases }}
 {{- $instanceName := printf "%s-%s" $d.name $.Values.nameSuffix }}
 {{- /* wrap with brackets to prevent helm to dive into non-existent object */}}
 {{- $instancePooler := hasKey ($d.pooler) "enabled" | ternary ($d.pooler).enabled $.Values.pooler.enabled }}
 {{- $instancePoolerInstances := ($d.pooler).instances | default $.Values.pooler.instances }}
 {{- $instancePoolerParams := ($d.pooler).parameters | default $.Values.pooler.parameters }}
 {{- $instancePoolerMode := ($d.pooler).mode | default $.Values.pooler.mode }}
+{{- $nodeAffinity := ($d.pooler).nodeAffinity | default $.Values.affinity.nodeAffinity }}
+{{- $nodeSelector := ($d.pooler).nodeSelector | default $.Values.default.nodeSelector }}
 {{- /* if true, pause client connections */}}
 {{- $instancePoolerPaused := hasKey ($d.pooler) "paused" | ternary ($d.pooler).paused $.Values.pooler.paused }}
 
@@ -24,18 +26,44 @@ spec:
   instances: {{ $instancePoolerInstances }}
   type: {{ . }}
   template:
+    metadata:
+      labels: {{- toYaml $.Values.commonLabels | nindent 8 }}
     spec:
       containers:
       - name: pgbouncer
         image: {{ $.Values.pooler.image }}
       imagePullSecrets:
       - name: {{ $.Values.image.pullSecret }}
+      affinity:
+        {{- if $nodeAffinity }}
+        nodeAffinity: {{- toYaml $nodeAffinity | nindent 10 }}
+        {{- end }}
+        {{- if and $nodeSelector (not $nodeAffinity) }}
+        nodeSelector: {{- toYaml $nodeSelector | nindent 10 }}
+        {{- end }}
+        {{- if $.Values.affinity.enablePodAntiAffinity }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: cnpg.io/podRole
+                  operator: In
+                  values:
+                  - pooler
+                - key: cnpg.io/cluster
+                  operator: In
+                  values:
+                  - {{ $instanceName }}
+              topologyKey: {{ $.Values.affinity.topologyKey }}
+            weight: 100
+        {{- end }}
   pgbouncer:
     poolMode: {{ $instancePoolerMode }}
     parameters: {{- toYaml $instancePoolerParams | nindent 6 }}
     paused: {{ $instancePoolerPaused }}
   monitoring:
-    enablePodMonitor: true
+    enablePodMonitor: false
 {{- end }}
 {{- end }}
 {{- end -}}
