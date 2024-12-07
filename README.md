@@ -87,6 +87,7 @@ See [Upgrade](README-upgrade.md)
 ### PITR recovery example
 See [PITR Restore](README-restore.md)
 
+---
 ## Values
 
 | Key | Type | Default | Description |
