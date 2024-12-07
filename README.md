@@ -1,6 +1,6 @@
 # cnpg-crd
 
-![Version: 0.19.4](https://img.shields.io/badge/Version-0.19.4-informational?style=flat-square) ![AppVersion: 16.6-5](https://img.shields.io/badge/AppVersion-16.6--5-informational?style=flat-square)
+![Version: 0.19.5](https://img.shields.io/badge/Version-0.19.5-informational?style=flat-square) ![AppVersion: 16.6-5](https://img.shields.io/badge/AppVersion-16.6--5-informational?style=flat-square)
 
 CloudNative-PG operator Custom Resource Definition
 
@@ -76,14 +76,13 @@ spec:
 - External-secret store should be configured as `ClusterSecretStore`, pointed to `kubernetes-secrets/postgres-pod` vault path
 
 ### Backup
-- To enable volumesnapshot for backup, set `backup.snapshot: true` in values
-- PITR recovery example README-restore.md
+- To enable volumesnapshot for backup, set `backup.snapshot: true` in values.yaml
 
 ### Major postgres version upgrade
 See [Upgrade](README-upgrade.md)
 
-### Restore the database
-See [Restore](README-restore.md)
+### PITR recovery example
+See [PITR Restore](README-restore.md)
 
 ## Values
 
