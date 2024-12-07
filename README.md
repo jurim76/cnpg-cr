@@ -67,7 +67,7 @@ spec:
   cluster:
     name: test-db
 ```
-
+---
 ### Troubleshooting
 - https://cloudnative-pg.io/documentation/current/troubleshooting/
 
@@ -75,12 +75,15 @@ spec:
 - Vault secret path should be in format `kubernetes-secrets/postgres-pod/<namespace>/<db-name>`
 - External-secret store should be configured as `ClusterSecretStore`, pointed to `kubernetes-secrets/postgres-pod` vault path
 
+---
 ### Backup
 - To enable volumesnapshot for backup, set `backup.snapshot: true` in values.yaml
 
+---
 ### Major postgres version upgrade
 See [Upgrade](README-upgrade.md)
 
+---
 ### PITR recovery example
 See [PITR Restore](README-restore.md)
 
