@@ -9,6 +9,12 @@
 {{- $nodeSelector := ($d.pooler).nodeSelector | default $.Values.default.nodeSelector }}
 {{- /* if true, pause client connections */}}
 {{- $instancePoolerPaused := hasKey ($d.pooler) "paused" | ternary ($d.pooler).paused $.Values.pooler.paused }}
+{{- $serviceName := "" }}
+{{- if ($d.service).name }}
+{{- $serviceName = printf "%s-%s" ($d.service).name $.Values.nameSuffix }}
+{{- else }}
+{{- $serviceName = $instanceName }}
+{{- end }}
 
 {{- if eq (toString $instancePooler) "true" }}
 {{- /* cnpg services suffixes are "rw", "ro" */}}
@@ -17,9 +23,9 @@
 apiVersion: postgresql.cnpg.io/v1
 kind: Pooler
 metadata:
-  name: {{ $instanceName }}-pooler-{{ . }}
+  name: {{ $serviceName }}-pooler-{{ . }}
   labels: {{- include "core.labels" $ | nindent 4 }}
-    name: {{ $instanceName }}-pooler-{{ . }}
+    name: {{ $serviceName }}-pooler-{{ . }}
 spec:
   cluster:
     name: {{ $instanceName }}

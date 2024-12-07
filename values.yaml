@@ -1,8 +1,7 @@
 # commonLabels these labels are added to all the manifests
 commonLabels: {}
 
-commonAnnotations:
-  categories: database
+commonAnnotations: {}
 
 podEnv:
 - name: KUBE_NAMESPACE
@@ -81,8 +80,8 @@ pooler:
     default_pool_size: "10"
 
 exporter:
-  # prometheus discovery label
-  release: prometheus-dbs
+  labels:
+    release: prometheus-dbs
   configMapName: postgres-exporter-cm
 
 # additional postgres config
@@ -91,21 +90,23 @@ config: ""
 # cluster instances
 databases: []
 
-affinity:
-  enablePodAntiAffinity: true
-  topologyKey: hw_host
-  nodeAffinity: {}
-  #  requiredDuringSchedulingIgnoredDuringExecution:
-  #    nodeSelectorTerms:
-  #    - matchExpressions:
-  #      - key: pgdb
-  #        operator: In
-  #        values:
-  #        - "true"
-  #      - key: node-type
-  #        operator: NotIn
-  #        values:
-  #        - "bare-metal"
+affinity: {}
+# affinity example
+#affinity:
+#  enablePodAntiAffinity: true
+#  topologyKey: hw_host
+#  nodeAffinity: {}
+#    requiredDuringSchedulingIgnoredDuringExecution:
+#      nodeSelectorTerms:
+#      - matchExpressions:
+#        - key: pgdb
+#          operator: In
+#          values:
+#          - "true"
+#        - key: node-type
+#          operator: NotIn
+#          values:
+#          - "bare-metal"
 
 # database defaults that can be overwritten per-instance
 default:

@@ -1,7 +1,18 @@
-Chart for deploying CloudNative-PG operator CR (Custom Resource).
-CloudNativePG is an open source operator designed to manage PostgreSQL workloads.
-https://cloudnative-pg.io/documentation/current/
+# cnpg-crd
 
+![Version: 0.19.4](https://img.shields.io/badge/Version-0.19.4-informational?style=flat-square) ![AppVersion: 16.6-5](https://img.shields.io/badge/AppVersion-16.6--5-informational?style=flat-square)
+
+CloudNative-PG operator Custom Resource Definition
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| Juri Malinovski | <coil93@gmail.com> |  |
+
+Chart for deploying CloudNative-PG operator Custom Resource (CR).
+CloudNativePG is an open source operator designed to manage PostgreSQL workloads.
+[Documentation](https://cloudnative-pg.io/documentation/current/)
 
 ### Notes
 The following parameters are fixed and exclusively controlled by the operator:
@@ -69,4 +80,68 @@ spec:
 - PITR recovery example README-restore.md
 
 ### Major postgres version upgrade
-See README-upgrade.md
+See [Upgrade](README-upgrade.md)
+
+### Restore the database
+See [Restore](README-restore.md)
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| affinity | object | `{}` |  |
+| backup.enabled | bool | `false` |  |
+| backup.retention | string | `"8d"` |  |
+| backup.schedule | string | `"0 0 0 * * *"` |  |
+| backup.snapshot | bool | `false` |  |
+| commonAnnotations | object | `{}` |  |
+| commonLabels | object | `{}` |  |
+| config | string | `""` |  |
+| databases | list | `[]` |  |
+| default.databases | object | `{}` |  |
+| default.instances | int | `2` |  |
+| default.limits | object | `{}` |  |
+| default.nodeSelector | object | `{}` |  |
+| default.requests.cpu | string | `"100m"` |  |
+| default.requests.memory | string | `"200Mi"` |  |
+| default.roles | object | `{}` |  |
+| default.storage | string | `"10Gi"` |  |
+| exporter.configMapName | string | `"postgres-exporter-cm"` |  |
+| exporter.labels.release | string | `"prometheus-dbs"` |  |
+| image.pullSecret | string | `""` |  |
+| image.registry | string | `"ghcr.io"` |  |
+| image.repository | string | `"cloudnative-pg/postgresql"` |  |
+| image.tag | string | `""` |  |
+| nameSuffix | string | `"db"` |  |
+| podEnv[0].name | string | `"KUBE_NAMESPACE"` |  |
+| podEnv[0].valueFrom.fieldRef.fieldPath | string | `"metadata.namespace"` |  |
+| podEnv[1].name | string | `"ENV_NAME"` |  |
+| podEnv[1].valueFrom.configMapKeyRef.key | string | `"env"` |  |
+| podEnv[1].valueFrom.configMapKeyRef.name | string | `"environment-name"` |  |
+| podEnv[1].valueFrom.configMapKeyRef.optional | bool | `true` |  |
+| pooler.enabled | bool | `true` |  |
+| pooler.image | string | `"ghcr.io/cloudnative-pg/pgbouncer:1.23.0"` |  |
+| pooler.instances | int | `2` |  |
+| pooler.mode | string | `"transaction"` |  |
+| pooler.parameters.default_pool_size | string | `"10"` |  |
+| pooler.parameters.max_client_conn | string | `"1000"` |  |
+| pooler.paused | bool | `false` |  |
+| postgresConfig | string | `"postgres-base-conf"` |  |
+| postgresql.custom_parameters | object | `{}` |  |
+| postgresql.parameters.include_dir | string | `"/projected/config"` |  |
+| postgresql.shared_preload_libraries[0] | string | `"auto_explain"` |  |
+| postgresql.shared_preload_libraries[1] | string | `"decoderbufs"` |  |
+| postgresql.shared_preload_libraries[2] | string | `"passwordcheck"` |  |
+| postgresql.shared_preload_libraries[3] | string | `"pg_cron"` |  |
+| postgresql.shared_preload_libraries[4] | string | `"pg_failover_slots"` |  |
+| postgresql.shared_preload_libraries[5] | string | `"pg_repack"` |  |
+| postgresql.shared_preload_libraries[6] | string | `"pg_stat_statements"` |  |
+| postgresql.shared_preload_libraries[7] | string | `"pgaudit"` |  |
+| primaryUpdateStrategy | string | `"unsupervised"` |  |
+| priorityClassName | string | `""` |  |
+| s3.bucket | string | `"s3://pgbackup"` |  |
+| s3.endpoint | string | `"http://seaweedfs-s3.seaweedfs:8333"` |  |
+| s3.secret | string | `"seaweedfs-s3"` |  |
+| serviceAccount.create | bool | `true` |  |
+| serviceAccount.name | string | `"postgres-pod"` |  |
+| serviceDomain | string | `"svc.cluster.local"` |  |

@@ -1,6 +1,7 @@
-# PITR example
-# https://cloudnative-pg.io/documentation/1.24/recovery/
+### PITR example
+https://cloudnative-pg.io/documentation/current/recovery/
 
+```yaml
 ---
 apiVersion: postgresql.cnpg.io/v1
 kind: Cluster
@@ -50,3 +51,4 @@ spec:
       # reduce the recovery time with parallel jobs
       wal:
         maxParallel: 8
+```

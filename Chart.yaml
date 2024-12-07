@@ -2,7 +2,7 @@ apiVersion: v2
 name: cnpg-crd
 description: CloudNative-PG operator Custom Resource Definition
 icon: https://raw.githubusercontent.com/cloudnative-pg/artwork/main/cloudnativepg-logo.svg
-version: 0.19.4
+version: 0.19.5
 appVersion: 16.6-5
 maintainers:
   - name: Juri Malinovski

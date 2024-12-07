@@ -6,9 +6,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: {{ $instanceName }}-exporter
-  labels: {{- include "core.labels" $ | nindent 4 }}
+  labels:
+    {{- include "core.labels" $ | nindent 4 }}
+    {{- toYaml $.Values.exporter.labels | nindent 4 }}
     name: {{ $instanceName }}-exporter
-    release: {{ $.Values.exporter.release }}
 spec:
   podMetricsEndpoints:
   - port: metrics
