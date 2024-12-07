@@ -1,5 +1,5 @@
 apiVersion: v2
-name: cnpg-crd
+name: cnpg-cr
 description: CloudNative-PG operator Custom Resource Definition
 icon: https://raw.githubusercontent.com/cloudnative-pg/artwork/main/cloudnativepg-logo.svg
 version: 0.19.5

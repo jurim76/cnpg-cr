@@ -1,4 +1,4 @@
-# cnpg-crd
+# cnpg-cr
 
 ![Version: 0.19.5](https://img.shields.io/badge/Version-0.19.5-informational?style=flat-square) ![AppVersion: 16.6-5](https://img.shields.io/badge/AppVersion-16.6--5-informational?style=flat-square)
 
